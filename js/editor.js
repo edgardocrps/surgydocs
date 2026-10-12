@@ -498,7 +498,7 @@ const Editor = (() => {
       s.badge.textContent = ok ? '✓' : String(s.numero);
       s.badge.classList.toggle('hecha', ok);
     }
-    st.pestanas.forEach((p, i) => { if (p.contador) { p.contador.textContent = `${por[i]}/${tot[i]}`; p.contador.classList.toggle('completo', por[i] === tot[i]); } });
+    st.pestanas.forEach((p, i) => { if (p.contador) { p.contador.textContent = `${por[i]}/${tot[i]}`; p.contador.classList.toggle('completo', tot[i] > 0 && por[i] === tot[i]); } });
     st.barra.style.width = (visibles.length ? (100 * hechas / visibles.length) : 0) + '%';
     st.avanceTexto.textContent = `${hechas} DE ${visibles.length} SECCIONES`;
   }
@@ -544,7 +544,10 @@ const Editor = (() => {
     if (!Almacen.existe(st.id) && !nombreCompleto() && JSON.stringify(actuales) === st.valoresIniciales) return false;
     const datos = valoresActuales();
     for (const [k, v] of Object.entries(st.generados)) datos[Almacen.GEN + k] = v;
-    Almacen.guardar(st.id, datos);
+    // 8.3: abrir un documento sin cambiar nada no lo reescribe (su fecha de modificación decide qué versión gana al sincronizar)
+    const previo = Almacen.cargar(st.id);
+    const igual = Almacen.existe(st.id) && Object.keys(datos).length === Object.keys(previo).length && Object.keys(datos).every((k) => previo[k] === datos[k]);
+    if (!igual) Almacen.guardar(st.id, datos);
     for (const k of st.recordables) {
       const v = mayus(leer(k).trim());
       if (!v) continue;

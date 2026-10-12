@@ -1,10 +1,11 @@
 // 7.0: guarda los archivos de la app en el equipo para que funcione sin internet.
 // Lo genera tools/construir_web.sh (lista de archivos y versión); no editar sw.js a mano.
-const CACHE = 'historias-8.3.0-266b6915d9';
+const CACHE = 'historias-8.3.0-888fbc189b';
 const ARCHIVOS = ["./","app.css","assets/base_formatos.docx","assets/plantilla_apendicitis.docx","assets/plantilla_biliar.docx","assets/plantilla_hernia_inguinal.docx","assets/plantilla_hernia_umbilical.docx","assets/plantilla_obstruccion.docx","assets/plantilla_politrauma.docx","assets/plantilla_vascular.docx","assets/presentacion_electivos.pptx","iconos/favicon.png","iconos/icono.ico","iconos/icono.svg","iconos/icono-180.png","iconos/icono-192.png","iconos/icono-512.png","iconos/icono-maskable-512.png","iconos/logo.svg","index.html","js/almacen.js","js/app.js","js/copia.js","js/editor.js","js/iconos.js","js/logica.js","js/nube.js","js/nucleo.js","js/ui.js","js/vistaprevia.js","lib/docx-preview.min.js","lib/jszip.min.js","manifest.webmanifest","nucleo.js","trabajador.js"];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ARCHIVOS)).then(() => self.skipWaiting()));
+  // cache: 'reload' = se bajan de GitHub Pages, no de la caché del navegador (que podría tener una publicación anterior)
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ARCHIVOS.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {

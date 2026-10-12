@@ -63,6 +63,9 @@ const App = (() => {
   async function sincronizarFondo(avisar = false) {
     if (!Nube.disponible() || !Nube.cuenta()) return;
     if (avisar && Nube.necesitaReconectar()) { reconectar(); return; }
+    // Con un documento abierto no se sincroniza: lo bajado de Drive se reemplazaría por la versión del formulario al autoguardar.
+    // Se sincroniza al cerrar el documento (cerrarEditor).
+    if (Editor.abierto()) { if (avisar) aviso('Cierre el documento para sincronizar', true); return; }
     const r = await Nube.sincronizar();
     if (avisar) aviso(r.ok ? 'Sincronizado' : 'No se pudo sincronizar: ' + (r.error === 'reconectar' ? 'hay que entrar de nuevo con Google' : r.error), true);
     if ((avisar || r.cambio || Nube.necesitaReconectar()) && !Editor.abierto()) mostrar(actual);
@@ -741,7 +744,12 @@ const App = (() => {
         const m = e.data || {};
         // Al cerrar la ventana con sesión iniciada: se guarda lo que se estaba escribiendo y se sincroniza por última vez
         if (m.tipo === 'cerrar') {
-          try { if (Editor.abierto()) Editor.guardar(); await Nube.sincronizar(); } catch (_) {}
+          try {
+            if (Editor.abierto()) Editor.guardar();
+            // Si ya hay una sincronización en curso se espera a que termine (máx. 10 s) y se repite, para que suba la última edición
+            for (let i = 0; i < 20 && Nube.ocupado(); i++) await new Promise((ok) => setTimeout(ok, 500));
+            await Nube.sincronizar();
+          } catch (_) {}
           window.chrome.webview.postMessage({ tipo: 'cerrar_ok' });
         }
         if (m.tipo === 'importar' && m.datos) importar(new Blob([deBase64(m.datos)], { type: 'application/zip' }));

@@ -37,7 +37,7 @@ const Copia = (() => {
   }
 
   /** Copia completa: todas las historias, sus fotos y lo que la app recuerda. */
-  async function exportar() {
+  async function exportar(marcarCopia = true) {
     const zip = new JSZip();
     zip.file('borrados.json', JSON.stringify(Almacen.borrados()));
     const ids = Almacen.listar().map((r) => r.id);
@@ -49,7 +49,8 @@ const Copia = (() => {
     }
     zip.file('info.json', JSON.stringify({ app: 'HistoriasCirugia', historias: ids.length, fecha: Date.now(), origen: 'web ' + VERSION }));
     const blob = await zip.generateAsync({ type: 'blob', mimeType: 'application/zip', compression: 'DEFLATE' });
-    await Almacen.ponerPref('copia', { ultima: String(Date.now()) });
+    // La sincronización con Drive no cuenta como "copia de seguridad guardada" por el usuario
+    if (marcarCopia) await Almacen.ponerPref('copia', { ultima: String(Date.now()) });
     return { blob, nombre: nombreArchivo(), n: ids.length };
   }
 
@@ -113,15 +114,17 @@ const Copia = (() => {
       if (nombre.startsWith('historias/') && nombre.endsWith('.json')) {
         const id = nombre.slice('historias/'.length, -'.json'.length);
         if (!id || id.includes('/')) continue;
-        if (sincronizando && borrados['h:' + id] != null) continue;
         const fecha = e.date ? desdeZip(e.date) : 0;
+        // Eliminado en este equipo: la versión de Drive solo vuelve si se editó DESPUÉS de eliminarla
+        if (sincronizando && borrados['h:' + id] != null && !(fecha > 0 && fecha > Number(borrados['h:' + id]))) continue;
         if (!Almacen.existe(id) || (fecha > 0 && fecha > Almacen.modificado(id))) {
-          if (!sincronizando) devueltos.push('h:' + id);
+          devueltos.push('h:' + id);
           let d;
           try { d = JSON.parse(await e.async('string')); } catch (_) { continue; }
           const limpio = {};
           for (const [k, v] of Object.entries(d)) limpio[k] = v == null ? '' : String(v);
-          await Almacen.guardar(id, limpio, fecha > 0 ? fecha : Date.now());
+          // A mano (importar paciente, restaurar copia) el documento queda como "más reciente" para que gane sobre marcas de eliminado viejas
+          await Almacen.guardar(id, limpio, sincronizando ? (fecha > 0 ? fecha : Date.now()) : Date.now());
           n++;
         }
       } else if (nombre.startsWith('fotos/') && nombre.split('/').length === 2) {
@@ -136,18 +139,22 @@ const Copia = (() => {
           for (const [k, x] of Object.entries(o)) {
             if (typeof x !== 'string') continue;
             const local = Almacen.todasPref(p)[k];
-            v[k] = !sincronizando || local == null ? x : (x.startsWith('[') ? unirListas(local, x, borrados) : local);
+            // Las listas se unen y lo demás (perfil, ajustes) conserva lo de este equipo: una copia ajena no pisa tu perfil ni tu agenda
+            v[k] = local == null ? x : (x.startsWith('[') ? unirListas(local, x, borrados) : local);
           }
           await Almacen.ponerPref(p, v);
         } catch (_) {}
       }
     }
     if (sincronizando) {
-      // Lo que se eliminó en otro equipo se elimina aquí; las marcas se acumulan en ambos lados.
+      // Lo que se eliminó en otro equipo se elimina aquí (salvo que aquí se editó DESPUÉS); las marcas se acumulan en ambos lados.
       const todos = Almacen.borrados();
+      for (const k of devueltos) delete todos[k];   // documentos que volvieron por editarse después de eliminarse
       for (const [k, t] of Object.entries(remotos)) {
+        const existe = k.startsWith('h:') && Almacen.existe(k.slice(2));
+        if (existe && Almacen.modificado(k.slice(2)) > Number(t)) continue;
         if (todos[k] == null) todos[k] = Number(t) || Date.now();
-        if (k.startsWith('h:') && Almacen.existe(k.slice(2))) await Almacen.quitar(k.slice(2));
+        if (existe) await Almacen.quitar(k.slice(2));
       }
       await Almacen.ponerBorrados(todos);
       const ev = Almacen.pref('agenda', 'eventos', null);

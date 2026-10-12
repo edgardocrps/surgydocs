@@ -128,7 +128,7 @@ const Nube = (() => {
 
   async function buscar(token) {
     const q = encodeURIComponent(`name='${ARCHIVO}'`);
-    const o = await (await drive(`${API}/files?spaces=appDataFolder&q=${q}&fields=files(id)&pageSize=1`, token)).json();
+    const o = await (await drive(`${API}/files?spaces=appDataFolder&q=${q}&orderBy=createdTime&fields=files(id)&pageSize=1`, token)).json();
     return o.files && o.files.length ? o.files[0].id : null;
   }
 
@@ -155,7 +155,7 @@ const Nube = (() => {
         const r = await drive(`${API}/files/${id}?alt=media`, token);
         await Copia.restaurar(await r.blob(), true);
       }
-      const { blob } = await Copia.exportar();
+      const { blob } = await Copia.exportar(false);
       await subir(token, id, blob);
       await Almacen.ponerPref('nube', { sync: String(Date.now()), reconectar: '' });
       return true;
@@ -200,5 +200,5 @@ const Nube = (() => {
     try { await sincronizarConToken(token); return true; } catch (_) { return false; }
   }
 
-  return { disponible, omitido, omitir, cuenta, cuentaAnterior, ultimaSync, necesitaReconectar, iniciarSesion, cerrarSesion, avisarPrograma, entrar, completarInicio, sincronizar, tokenSilencioso, sincronizarConToken, firmaDatos };
+  return { ocupado: () => ocupado, disponible, omitido, omitir, cuenta, cuentaAnterior, ultimaSync, necesitaReconectar, iniciarSesion, cerrarSesion, avisarPrograma, entrar, completarInicio, sincronizar, tokenSilencioso, sincronizarConToken, firmaDatos };
 })();

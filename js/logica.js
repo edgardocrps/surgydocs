@@ -123,7 +123,7 @@ const NombreArchivo = (() => {
 
   /** d: función clave -> valor del campo. etiqueta: reemplaza al tipo (p. ej. la presentación del electivo). */
   function armar(tipo, paciente, d, nombreModulo, extension = 'docx', etiqueta = null) {
-    const partes = [limpio(etiqueta || ETIQUETAS[tipo] || nombreModulo), limpio(paciente) || 'SIN NOMBRE', detalle(tipo, d, nombreModulo)];
+    const partes = [limpio(etiqueta || ETIQUETAS[tipo] || nombreModulo), limpio(paciente).slice(0, 60).trim() || 'SIN NOMBRE', detalle(tipo, d, nombreModulo)];
     return partes.filter(Boolean).join(' ') + '.' + extension;
   }
   return { armar, limpio };
