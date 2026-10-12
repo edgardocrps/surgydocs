@@ -390,7 +390,9 @@ const Editor = (() => {
     const todos = [...sec.antes, ...sec.ayudas, ...sec.campos, ...sec.despues];
     const iniciales = {};
     for (const c of todos) iniciales[c.clave] = valorPorDefecto(c);
-    st.secciones.push({ tarjeta, badge, numero, claves: todos.map((c) => c.clave), iniciales, pestana });
+    // 8.3: visibleSi = la tarjeta completa solo aparece cuando se cumple su condición (ej. SEXO=FEMENINO); "oculta" es aparte de
+    // la visibilidad por pestaña (mostrarPestana)
+    st.secciones.push({ tarjeta, badge, numero, claves: todos.map((c) => c.clave), iniciales, pestana, visibleSi: sec.visibleSi || '', oculta: false });
 
     if (sec.accion && sec.autoSegun) (st.automaticos = st.automaticos || []).push({ indice, claves: sec.autoSegun.split(',').map((x) => x.trim()) });
     for (const c of sec.antes) agregarCampo(cuerpo, c, guardados);
@@ -428,7 +430,17 @@ const Editor = (() => {
     if (expr.includes('~')) return v.toLowerCase().includes(expr.slice(expr.indexOf('~') + 1).toLowerCase());
     return v === 'SÍ';
   }
-  function aplicarDependencias() { for (const d of actual.dependientes) d.grupo.hidden = !cumple(d.expr); }
+  function aplicarDependencias() {
+    for (const d of actual.dependientes) d.grupo.hidden = !cumple(d.expr);
+    let hubo = false;
+    for (const s of actual.secciones) {
+      if (!s.visibleSi) continue;
+      const oculta = !cumple(s.visibleSi);
+      if (oculta !== s.oculta) { s.oculta = oculta; hubo = true; }
+      s.tarjeta.hidden = s.oculta || s.pestana !== actual.actual;
+    }
+    if (hubo && actual.avanceTexto) actualizarAvance();
+  }
 
   async function refrescarDinamicas(clave) {
     const st = actual;
@@ -478,7 +490,8 @@ const Editor = (() => {
     if (!st) return;
     let hechas = 0;
     const por = st.pestanas.map(() => 0), tot = st.pestanas.map(() => 0);
-    for (const s of st.secciones) {
+    const visibles = st.secciones.filter((s) => !s.oculta);   // las que no aplican (visibleSi) no cuentan
+    for (const s of visibles) {
       const ok = seccionCompleta(s);
       if (ok) { hechas++; por[s.pestana]++; }
       tot[s.pestana]++;
@@ -486,8 +499,8 @@ const Editor = (() => {
       s.badge.classList.toggle('hecha', ok);
     }
     st.pestanas.forEach((p, i) => { if (p.contador) { p.contador.textContent = `${por[i]}/${tot[i]}`; p.contador.classList.toggle('completo', por[i] === tot[i]); } });
-    st.barra.style.width = (st.secciones.length ? (100 * hechas / st.secciones.length) : 0) + '%';
-    st.avanceTexto.textContent = `${hechas} DE ${st.secciones.length} SECCIONES`;
+    st.barra.style.width = (visibles.length ? (100 * hechas / visibles.length) : 0) + '%';
+    st.avanceTexto.textContent = `${hechas} DE ${visibles.length} SECCIONES`;
   }
   function actualizarCabecera() {
     const n = nombreCompleto();
@@ -501,7 +514,7 @@ const Editor = (() => {
     const nueva = Math.max(0, Math.min(i, st.pestanas.length - 1));
     st.pestanas[st.actual].desplazamiento = st.scroll.scrollTop;
     st.actual = nueva;
-    for (const s of st.secciones) s.tarjeta.hidden = s.pestana !== nueva;
+    for (const s of st.secciones) s.tarjeta.hidden = !!s.oculta || s.pestana !== nueva;
     st.pestanas.forEach((p, k) => { p.pie.hidden = k !== nueva; p.celda.classList.toggle('activa', k === nueva); });
     st.botonVista.querySelector('.fl-texto').textContent = `VISTA PREVIA · HOJA ${st.pestanas[nueva].hoja}`;
     st.scroll.scrollTop = st.pestanas[nueva].desplazamiento;
