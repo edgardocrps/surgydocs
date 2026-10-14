@@ -194,11 +194,11 @@ const App = (() => {
     c.append(subtitulo('Documentos'), rejillaSeguimiento(Carpetas.DOCUMENTOS));
     c.append(subtitulo('Electivos'), rejillaSeguimiento(Carpetas.ELECTIVOS));
 
-    const electivos = todas.filter((r) => r.tipo === 'ELECTIVO');
+    const electivos = todas.filter((r) => Carpetas.ELECTIVOS.includes(r.tipo));
     if (electivos.length) {
       const cuenta = new Map();
       for (const r of electivos) { const e = (Almacen.cargar(r.id).el_estado || '').trim() || 'EN PREPARACIÓN'; cuenta.set(e, (cuenta.get(e) || 0) + 1); }
-      c.append(h('button.enlace.estados', { type: 'button', onclick: () => { filtroTipo = 'ELECTIVO'; mostrar(1); } },
+      c.append(h('button.enlace.estados', { type: 'button', onclick: () => { filtroTipo = 'ELECTIVOS'; mostrar(1); } },
         [...cuenta.entries()].map(([k, v]) => `${v} ${k}`).join('  ·  ')));
     }
     const qx = Agenda.cirugias().filter((e) => e.fecha >= Fecha.hoy()).sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
@@ -222,7 +222,8 @@ const App = (() => {
     NOTA: 'NOTA OPERATORIA', EVOLUCION: 'EVOLUCIÓN Y ÓRDENES MÉDICAS', PROCEDIMIENTO: 'PROCEDIMIENTOS', CURVAS: 'CURVAS',
     NPT: 'NUTRICIÓN PARENTERAL', EGRESO: 'EGRESOS', RESP_IC: 'RESPUESTA DE INTERCONSULTAS', NOTA_CG: 'NOTAS DE CIRUGÍA GENERAL',
     SOLICITUDES: 'SOLICITUDES', CONSENTIMIENTO: 'CONSENTIMIENTOS', INFORME: 'INFORME MÉDICO', REFERENCIA: 'INFORME DE ESTUDIOS',
-    MATERIALES: 'MATERIALES', RECIPE: 'RÉCIPE E INDICACIONES', ELECTIVO: 'PACIENTES ELECTIVOS',
+    MATERIALES: 'MATERIALES', RECIPE: 'RÉCIPE E INDICACIONES', DAMERO: 'DAMERO DE LABORATORIOS', ELECTIVO: 'PACIENTES – CIRUGÍA GENERAL',
+    ELECTIVO_URO: 'PACIENTES – UROLOGÍA', ELECTIVO_ORL: 'PACIENTES – OTORRINOLARINGOLOGÍA',
   };
 
   function rejillaSeguimiento(ids) {
@@ -262,7 +263,7 @@ const App = (() => {
       const f = mayus(filtroTexto.trim());
       const ds = digitos(f);
       const nf = Carpetas.claveNombre(f);
-      const items = Carpetas.agrupar(Almacen.listar()).filter((cp) => (filtroTipo == null || cp.tipos.includes(filtroTipo)) &&
+      const items = Carpetas.agrupar(Almacen.listar()).filter((cp) => (filtroTipo == null || (filtroTipo === 'ELECTIVOS' ? cp.tipos.some((t) => Carpetas.ELECTIVOS.includes(t)) : cp.tipos.includes(filtroTipo))) &&
         (!f || cp.docs.some((d) => Carpetas.claveNombre(d.nombre).includes(nf)) || (ds && cp.docs.some((d) => digitos(d.cedula).includes(ds)))));
       if (!items.length) { lista.append(vacio(carpetas.length ? 'NINGÚN PACIENTE COINCIDE CON LA BÚSQUEDA.' : 'AÚN NO HAY PACIENTES GUARDADOS.')); return; }
       for (const cp of items) lista.append(tarjetaCarpeta(cp));
@@ -630,6 +631,7 @@ const App = (() => {
 
     c.append(subtitulo('Novedades de la versión'));
     c.append(tarjeta(...[
+      '8.4.0: respuesta de interconsulta y nota de cirugía general con MASTITIS y descripción guiada de mama y cuello (siempre por encima del tórax); nuevos formatos de emergencia INFECCIONES y COLOPROCTOLOGÍA; pacientes electivos de UROLOGÍA y OTORRINOLARINGOLOGÍA (sin fotos ni presentación); listas de materiales de urología, otorrinolaringología, traqueostomía y limpieza quirúrgica; DAMERO de laboratorios; egreso por servicio; nota operatoria de traqueostomía; fechas con 6 dígitos (021026 escribe 02/10/2026); glicemia capilar con diabetes compensada o descompensada; doble antibiótico en las órdenes; preparar para quirófano opcional; lado en ojos, oídos y extremidades del politraumatizado; maniobras apendiculares con botones.',
       '8.3.0: cuenta de Google opcional ("Continuar" usa la app como siempre; "Continuar con Google Drive" guarda sus pacientes en su Drive y los muestra en cualquier equipo con la misma cuenta). Los archivos Word se llaman "HC JUAN PÉREZ APENDICITIS AGUDA", "LISTA DE MATERIALES JUAN PÉREZ APENDICECTOMÍA ABIERTA", "INFORME MÉDICO JUAN PÉREZ LABORATORIOS"…',
       '8.2.0: lista de materiales con letra 12 y renglones que llenan la hoja; curvas con título subrayado, datos en un renglón (nombre, edad, C.I., NH) y cuadrícula continua más grande; informe médico con la misma letra en todo, espacios parejos y raya para el sello; los pacientes electivos se pueden eliminar desde su ficha y desde la agenda (su cirugía sale del calendario).',
       '8.1.0: la app se llama SurgyDocs. Vista previa igual a la hoja impresa. NH en blanco deja el espacio para escribirlo. Mannheim visible en la nota operatoria, plan "PROBABLE ALTA MÉDICA" / "ALTA MÉDICA EL DÍA DE HOY", exámenes por regiones en párrafos separados, Materiales envía por WhatsApp la lista y el informe en Word, resumen de caso clínico del electivo en una hoja y dibujo de portada según la patología.',

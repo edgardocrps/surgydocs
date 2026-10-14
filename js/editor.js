@@ -104,6 +104,15 @@ const Editor = (() => {
     } else inp.blur();
   }
 
+  /** 8.4: fecha escrita con 6 (ddmmaa) u 8 dígitos -> dd/mm/aaaa (igual que Texto.fechaDigitos del núcleo). */
+  function fechaDigitos(v) {
+    const t = v.trim();
+    if (!/^\d{6}$|^\d{8}$/.test(t)) return v;
+    const d = +t.slice(0, 2), m = +t.slice(2, 4);
+    if (d < 1 || d > 31 || m < 1 || m > 12) return v;
+    return t.slice(0, 2) + '/' + t.slice(2, 4) + '/' + (t.length === 6 ? (+t.slice(4) <= (new Date().getFullYear() % 100) + 1 ? '20' : '19') + t.slice(4) : t.slice(4));
+  }
+
   function texto(c, valor, padre) {
     const multi = !!c.multilinea;
     const inp = multi ? h('textarea.campo', { rows: 3 }) : h('input.campo', { type: 'text' });
@@ -115,12 +124,13 @@ const Editor = (() => {
     const t = c.teclado;
     if (!multi && t === 'NUMERO') inp.setAttribute('inputmode', 'numeric');
     else if (!multi && t === 'DECIMAL') inp.setAttribute('inputmode', 'decimal');
-    else if (!multi && t === 'BARRA') inp.setAttribute('inputmode', 'numeric');
-    const filtro = !multi && t === 'NUMERO' ? /[^0-9]/g : !multi && t === 'DECIMAL' ? /[^0-9.,]/g : !multi && t === 'BARRA' ? /[^0-9/]/g : null;
+    else if (!multi && (t === 'BARRA' || t === 'FECHA')) inp.setAttribute('inputmode', 'numeric');
+    const filtro = !multi && t === 'NUMERO' ? /[^0-9]/g : !multi && t === 'DECIMAL' ? /[^0-9.,]/g : !multi && (t === 'BARRA' || t === 'FECHA') ? /[^0-9/]/g : null;
     inp.addEventListener('input', () => {
       const pos = inp.selectionStart;
       let v = inp.value;
       if (filtro) v = v.replace(filtro, ''); else v = v.toLocaleUpperCase('es');
+      if (!multi && t === 'FECHA') v = fechaDigitos(v);
       if (v !== inp.value) { inp.value = v; try { inp.setSelectionRange(pos, pos); } catch (_) {} }
       if (multi) autoAlto(inp);
       cambio(c.clave);
@@ -659,7 +669,7 @@ const Editor = (() => {
       cont.append(p.pie);
     });
     // 8.2: el paciente electivo se puede eliminar desde su propia ficha (primera pestaña); su cirugía sale de la agenda
-    if (mod === 'ELECTIVO' && st.pestanas.length) {
+    if (Carpetas.ELECTIVOS.includes(mod) && st.pestanas.length) {
       st.pestanas[0].pie.append(h('div.eliminar-fila', boton('Eliminar paciente electivo', 'cerrar', 'peligro ancho', eliminarElectivo)));
     }
     st.botonVista = h('button.flotante', { type: 'button', onclick: () => vistaPrevia(st.pestanas[st.actual].hoja) }, icono('ver'), h('span.fl-texto', 'VISTA PREVIA'));

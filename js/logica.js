@@ -1,6 +1,6 @@
 // 7.0: lógica de las pantallas (igual que Android): fechas, perfil, carpetas del paciente y agenda.
 
-const VERSION = '8.3.1';
+const VERSION = '8.4.0';
 
 // ------------------------------------------------------------------ fechas
 const Fecha = (() => {
@@ -88,11 +88,11 @@ function nombreArchivo(t) { return (t || '').trim().replace(/[^A-Za-z0-9ÁÉÍÓ
  */
 const NombreArchivo = (() => {
   const ETIQUETAS = {
-    APENDICITIS: 'HC', BILIAR: 'HC', POLITRAUMA: 'HC', OBSTRUCCION: 'HC', VASCULAR: 'HC', PARED: 'HC',
+    APENDICITIS: 'HC', BILIAR: 'HC', POLITRAUMA: 'HC', OBSTRUCCION: 'HC', VASCULAR: 'HC', PARED: 'HC', INFECCIONES: 'HC', COLOPROCT: 'HC',
     NOTA: 'NOTA OPERATORIA', EVOLUCION: 'EVOLUCIÓN Y ÓRDENES', EGRESO: 'EGRESO', RECIPE: 'RÉCIPE',
     RESP_IC: 'RESPUESTA IC', NOTA_CG: 'NOTA CG', MATERIALES: 'LISTA DE MATERIALES', INFORME: 'INFORME MÉDICO',
     REFERENCIA: 'INFORME DE ESTUDIO', SOLICITUDES: 'SOLICITUDES', CONSENTIMIENTO: 'CONSENTIMIENTO',
-    PROCEDIMIENTO: 'PROCEDIMIENTO', CURVAS: 'CURVAS', NPT: 'NUTRICIÓN PARENTERAL', ELECTIVO: 'HC ELECTIVO',
+    PROCEDIMIENTO: 'PROCEDIMIENTO', CURVAS: 'CURVAS', DAMERO: 'DAMERO', NPT: 'NUTRICIÓN PARENTERAL', ELECTIVO: 'HC ELECTIVO', ELECTIVO_URO: 'HC ELECTIVO UROLOGÍA', ELECTIVO_ORL: 'HC ELECTIVO ORL',
   };
   // Solo letras (con tildes y Ñ), números y espacios: ningún guion ni símbolo
   const limpio = (t) => (t || '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLocaleUpperCase('es');
@@ -103,7 +103,7 @@ const NombreArchivo = (() => {
     const dx = () => corto(d('DX_CORTO')) || corto(d('DX_PRINCIPAL')) || corto(d('DX_SEL')) || corto(d('DX_L'));
     let r;
     switch (tipo) {
-      case 'APENDICITIS': case 'BILIAR': case 'POLITRAUMA': case 'OBSTRUCCION': case 'VASCULAR': case 'PARED': r = dx() || limpio(nombreModulo); break;
+      case 'APENDICITIS': case 'BILIAR': case 'POLITRAUMA': case 'OBSTRUCCION': case 'VASCULAR': case 'PARED': case 'INFECCIONES': case 'COLOPROCT': r = dx() || limpio(nombreModulo); break;
       case 'NOTA': r = corto(d('INTERV_REALIZADA')) || corto(d('INTERV_INDICADA')); break;
       case 'PROCEDIMIENTO': r = corto(d('proc')); break;
       case 'MATERIALES': r = corto(d('mat_cirugia')); break;
@@ -114,8 +114,8 @@ const NombreArchivo = (() => {
         break;
       }
       case 'REFERENCIA': r = (d('ref_estudio') === 'TOMOGRAFÍA' && corto(d('ref_tac'))) || corto(d('ref_estudio')); break;
-      case 'SOLICITUDES': case 'CONSENTIMIENTO': case 'EGRESO': case 'ELECTIVO': r = corto(d('INTERVENCION')) || dx(); break;
-      case 'CURVAS': case 'NPT': case 'RECIPE': r = ''; break;
+      case 'SOLICITUDES': case 'CONSENTIMIENTO': case 'EGRESO': case 'ELECTIVO': case 'ELECTIVO_URO': case 'ELECTIVO_ORL': r = corto(d('INTERVENCION')) || dx(); break;
+      case 'CURVAS': case 'NPT': case 'RECIPE': case 'DAMERO': r = ''; break;
       default: r = dx();
     }
     return (r || '').slice(0, 70).trim();
@@ -149,6 +149,8 @@ const INFO = {
   POLITRAUMA: ['mod_carro', 'POLITRAUMA', 'Trauma abdominal abierto o cerrado', '6 hojas; con intervención agrega la solicitud y los hemoderivados indicados'],
   OBSTRUCCION: ['mod_colon', 'OBSTRUCCIÓN', 'Abdomen agudo obstructivo', '12 hojas: las 6 clínicas, solicitud, CG, PFC, interconsulta (2 hojas) y consentimiento'],
   VASCULAR: ['mod_pie', 'PIE DIABÉTICO', 'Isquemia, úlceras, gangrena, Wagner', '11 hojas: las 6 clínicas, solicitud, CG, interconsulta (2 hojas) y consentimiento'],
+  INFECCIONES: ['mod_pie', 'INFECCIONES', 'Piel, partes blandas, cuello, absceso odontógeno', '7 hojas: Parte I, II y III (boca, cuello y región afectada), resumen, nota, órdenes con doble antibiótico y solicitud de intervención'],
+  COLOPROCT: ['mod_colon', 'COLOPROCTOLOGÍA', 'Hemorroides trombosadas, absceso perianal y glúteo', '7 hojas: Parte I, II y III (región anal o glútea), resumen, nota, órdenes con doble antibiótico y solicitud de intervención'],
   PARED: ['mod_abdomen', 'PARED', 'Inguinal, crural, umbilical, eventración', '7 hojas: Parte I, II y III, resumen, nota, órdenes y solicitud de intervención'],
   NOTA: ['mod_nota', 'NOTA OPERATORIA', 'Equipo, hallazgos, técnica y diagnóstico', '1 hoja: datos, equipo quirúrgico, anestesia, intervención indicada y realizada, hallazgos, técnica y diagnóstico postoperatorio'],
   RECIPE: ['mod_recipe', 'RÉCIPE', 'Récipe e indicaciones; cita y reposo opcionales', '1 o 2 hojas horizontales: RP e indicaciones; opcional cita y reposo médico'],
@@ -160,8 +162,11 @@ const INFO = {
   SOLICITUDES: ['mod_solicitudes', 'SOLICITUDES', 'Intervención, hemoderivados, IC, biopsia, cultivo', 'Elija cuáles: intervención y hemoderivados (original y copia), interconsulta, biopsia y cultivo (4 por hoja)'],
   CONSENTIMIENTO: ['mod_consentimiento', 'CONSENTIMIENTO', 'Riesgos por cirugía; acepta o no acepta', '1 hoja: diagnósticos, planteamiento, riesgos explicados y firmas de paciente y familiar'],
   PROCEDIMIENTO: ['mod_procedimiento', 'PROCEDIMIENTO', 'Tubo de tórax, vía central, paracentesis, VAC…', '1 hoja: nota de procedimiento redactada (7 procedimientos) con nota y fecha'],
+  DAMERO: ['mod_curvas', 'DAMERO', 'Laboratorios por día en el formato de la doctora', '1 hoja: el damero de laboratorios tal cual, con los datos del paciente y los valores en sus casillas'],
   CURVAS: ['mod_curvas', 'CURVAS', 'Temperatura, gasto, glicemia, peso', 'Curvas en blanco con papel milimetrado: una por hoja (horizontal) o dos por hoja (vertical)'],
   ELECTIVO: ['mod_electivo', 'ELECTIVO', 'Ficha, checklist, historia y presentación', 'Historia electiva de 10 hojas (Word) y presentación del caso (PowerPoint); checklist de valoraciones y WhatsApp al paciente'],
+  ELECTIVO_URO: ['mod_electivo', 'ELECTIVO UROLOGÍA', 'Ficha, checklist e historia de urología', 'Historia electiva de urología (Word, sin fotos ni presentación); checklist de valoraciones y WhatsApp al paciente'],
+  ELECTIVO_ORL: ['mod_electivo', 'ELECTIVO ORL', 'Ficha, checklist e historia de otorrinolaringología', 'Historia electiva de otorrinolaringología (Word, sin fotos ni presentación); checklist de valoraciones y WhatsApp al paciente'],
   NPT: ['mod_npt', 'NUTRICIÓN PARENTERAL', 'GEB, GET, volúmenes, bolsa EVA y órdenes', '1–2 hojas: cálculo con su formato (GEB, GET, requerimientos, volúmenes, velocidad) e indicación; órdenes con hidratación ajustada'],
   EVOLUCION: ['mod_evolucion', 'EVOLUCIÓN', 'Evolución diaria y órdenes médicas', '2 hojas: evolución médica (días, diagnósticos, tratamiento, SOAP, plan) y órdenes médicas'],
   EGRESO: ['mod_egreso', 'EGRESO', 'Récipe, indicaciones, resumen y alta', '3 hojas: récipe, indicaciones, cita y reposo o referencia; resumen de egreso (original y copia); órdenes de alta'],
@@ -171,9 +176,9 @@ const info = (id) => { const i = INFO[id]; return i ? { icono: i[0], corto: i[1]
 // ------------------------------------------------------------------ carpetas del paciente (Carpetas.kt)
 const Carpetas = (() => {
   const HOSPITALIZACION = ['NOTA', 'EVOLUCION', 'PROCEDIMIENTO', 'CURVAS', 'NPT', 'EGRESO'];
-  const DOCUMENTOS = ['RESP_IC', 'NOTA_CG', 'SOLICITUDES', 'CONSENTIMIENTO', 'INFORME', 'REFERENCIA', 'MATERIALES', 'RECIPE'];
-  const ELECTIVOS = ['ELECTIVO'];
-  const HC = ['APENDICITIS', 'BILIAR', 'POLITRAUMA', 'OBSTRUCCION', 'VASCULAR', 'PARED', 'ELECTIVO'];
+  const DOCUMENTOS = ['RESP_IC', 'NOTA_CG', 'SOLICITUDES', 'CONSENTIMIENTO', 'INFORME', 'REFERENCIA', 'MATERIALES', 'RECIPE', 'DAMERO'];
+  const ELECTIVOS = ['ELECTIVO', 'ELECTIVO_URO', 'ELECTIVO_ORL'];
+  const HC = ['APENDICITIS', 'BILIAR', 'POLITRAUMA', 'OBSTRUCCION', 'VASCULAR', 'PARED', 'INFECCIONES', 'COLOPROCT', 'ELECTIVO', 'ELECTIVO_URO', 'ELECTIVO_ORL'];
 
   const claveNombre = (n) => sinTildes(mayus(n || '')).replace('(COPIA)', '').replace(/[^A-Z0-9Ñ ]/g, ' ').replace(/\s+/g, ' ').trim();
   const sinNombre = (r) => !r.nombre.trim() || r.nombre === '(SIN NOMBRE)';
@@ -282,7 +287,7 @@ const Agenda = (() => {
     await guardar(l.filter((x) => !quitar.includes(x)));
   }
   function cirugias() {
-    return Almacen.listar().filter((r) => r.tipo === 'ELECTIVO').map((r) => {
+    return Almacen.listar().filter((r) => Carpetas.ELECTIVOS.includes(r.tipo)).map((r) => {
       const d = Almacen.cargar(r.id);
       const f = Fecha.desdeDma(d.el_fecha_qx);
       if (!f) return null;
