@@ -1,6 +1,6 @@
 // 7.0: lógica de las pantallas (igual que Android): fechas, perfil, carpetas del paciente y agenda.
 
-const VERSION = '8.4.0';
+const VERSION = '8.4.1';
 
 // ------------------------------------------------------------------ fechas
 const Fecha = (() => {
@@ -149,9 +149,9 @@ const INFO = {
   POLITRAUMA: ['mod_carro', 'POLITRAUMA', 'Trauma abdominal abierto o cerrado', '6 hojas; con intervención agrega la solicitud y los hemoderivados indicados'],
   OBSTRUCCION: ['mod_colon', 'OBSTRUCCIÓN', 'Abdomen agudo obstructivo', '12 hojas: las 6 clínicas, solicitud, CG, PFC, interconsulta (2 hojas) y consentimiento'],
   VASCULAR: ['mod_pie', 'PIE DIABÉTICO', 'Isquemia, úlceras, gangrena, Wagner', '11 hojas: las 6 clínicas, solicitud, CG, interconsulta (2 hojas) y consentimiento'],
-  INFECCIONES: ['mod_pie', 'INFECCIONES', 'Piel, partes blandas, cuello, absceso odontógeno', '7 hojas: Parte I, II y III (boca, cuello y región afectada), resumen, nota, órdenes con doble antibiótico y solicitud de intervención'],
-  COLOPROCT: ['mod_colon', 'COLOPROCTOLOGÍA', 'Hemorroides trombosadas, absceso perianal y glúteo', '7 hojas: Parte I, II y III (región anal o glútea), resumen, nota, órdenes con doble antibiótico y solicitud de intervención'],
-  PARED: ['mod_abdomen', 'PARED', 'Inguinal, crural, umbilical, eventración', '7 hojas: Parte I, II y III, resumen, nota, órdenes y solicitud de intervención'],
+  INFECCIONES: ['mod_infeccion', 'INFECCIONES', 'Piel, partes blandas, cuello, absceso odontógeno', '7 hojas: Parte I, II y III (boca, cuello y región afectada), resumen, nota, órdenes con doble antibiótico y solicitud de intervención'],
+  COLOPROCT: ['mod_colon', 'PATOLOGÍA ANAL', 'Hemorroides trombosadas, absceso perianal y glúteo', '7 hojas: Parte I, II y III (región anal o glútea), resumen, nota, órdenes con doble antibiótico y solicitud de intervención'],
+  PARED: ['mod_abdomen', 'PARED ABDOMINAL', 'Inguinal, crural, umbilical, eventración', '7 hojas: Parte I, II y III, resumen, nota, órdenes y solicitud de intervención'],
   NOTA: ['mod_nota', 'NOTA OPERATORIA', 'Equipo, hallazgos, técnica y diagnóstico', '1 hoja: datos, equipo quirúrgico, anestesia, intervención indicada y realizada, hallazgos, técnica y diagnóstico postoperatorio'],
   RECIPE: ['mod_recipe', 'RÉCIPE', 'Récipe e indicaciones; cita y reposo opcionales', '1 o 2 hojas horizontales: RP e indicaciones; opcional cita y reposo médico'],
   RESP_IC: ['mod_interconsulta', 'RESPUESTA IC', 'Con plantillas por caso', '1 hoja: datos, cama, diagnósticos, examen físico, rastreo, comentario y sugerencias'],
