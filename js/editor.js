@@ -131,7 +131,7 @@ const Editor = (() => {
       let v = inp.value;
       if (filtro) v = v.replace(filtro, ''); else v = v.toLocaleUpperCase('es');
       if (!multi && t === 'FECHA') v = fechaDigitos(v);
-      if (v !== inp.value) { inp.value = v; try { inp.setSelectionRange(pos, pos); } catch (_) {} }
+      if (v !== inp.value) { const largo = inp.value.length; inp.value = v; try { const p2 = t === 'FECHA' ? v.length : pos; inp.setSelectionRange(p2, p2); } catch (_) {} }
       if (multi) autoAlto(inp);
       cambio(c.clave);
     });
