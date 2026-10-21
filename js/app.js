@@ -92,7 +92,7 @@ const App = (() => {
     } }, h('span', 'Continuar con Google Drive'));
     capaLogin = h('div.login',
       h('div.logo.grande', h('img', { src: 'iconos/logo.svg', alt: '' })),
-      h('div.arranque-t', 'SurgyDocs'),
+      h('div.arranque-t', INSTITUCION.nombreApp),
       h('p.login-texto', 'Use la app de forma normal, con sus pacientes solo en este equipo, o conéctela con su cuenta de Google Drive para ver los mismos pacientes en cualquier equipo.'),
       continuar, h('div.login-sep'), boton, error);
     document.body.append(capaLogin);
@@ -144,7 +144,7 @@ const App = (() => {
     const hoyTxt = Fecha.dmaCorto(new Date());
     const cab = h('header.cabecera',
       h('div.cab-fila', h('div.logo', h('img', { src: 'iconos/logo.svg', alt: '' })),
-        h('div', h('div.cab-titulo.chico', 'SurgyDocs'), h('div.cab-sub', firma ? `${firma} · CIRUGÍA GENERAL` : 'CIRUGÍA GENERAL'))),
+        h('div', h('div.cab-titulo.chico', INSTITUCION.nombreApp), h('div.cab-sub', firma ? `${firma} · CIRUGÍA GENERAL` : 'CIRUGÍA GENERAL'))),
       h('div.datos', dato('Hoy', Fecha.corto(new Date())), dato('Ingresos hoy', String(todas.filter((r) => r.fecha.trim() === hoyTxt).length)),
         dato('Pacientes', String(Carpetas.agrupar(todas).length))));
     pantalla.append(cab);
@@ -631,11 +631,12 @@ const App = (() => {
 
     c.append(subtitulo('Novedades de la versión'));
     c.append(tarjeta(...[
+      '8.5.0: menú de MEDICAMENTOS por categorías (antibióticos, analgésicos, antieméticos, protectores gástricos, corticoides, hemostáticos, insulina…) con "+ Agregar medicamento" propio; servicio al que ingresa el paciente (cirugía general, urología, otorrinolaringología) con su examen físico (genitales; oídos, nariz y boca); infecciones con diagnósticos de piel y partes blandas y absceso escrotal; versión SurgyDocs C para el Hospital Universitario Dr. Alfredo Van Grieken.',
       '8.4.0: respuesta de interconsulta y nota de cirugía general con MASTITIS y descripción guiada de mama y cuello (siempre por encima del tórax); nuevos formatos de emergencia INFECCIONES y COLOPROCTOLOGÍA; pacientes electivos de UROLOGÍA y OTORRINOLARINGOLOGÍA (sin fotos ni presentación); listas de materiales de urología, otorrinolaringología, traqueostomía y limpieza quirúrgica; DAMERO de laboratorios; egreso por servicio; nota operatoria de traqueostomía; fechas con 6 dígitos (021026 escribe 02/10/2026); glicemia capilar con diabetes compensada o descompensada; doble antibiótico en las órdenes; preparar para quirófano opcional; lado en ojos, oídos y extremidades del politraumatizado; maniobras apendiculares con botones.',
       '8.3.0: cuenta de Google opcional ("Continuar" usa la app como siempre; "Continuar con Google Drive" guarda sus pacientes en su Drive y los muestra en cualquier equipo con la misma cuenta). Los archivos Word se llaman "HC JUAN PÉREZ APENDICITIS AGUDA", "LISTA DE MATERIALES JUAN PÉREZ APENDICECTOMÍA ABIERTA", "INFORME MÉDICO JUAN PÉREZ LABORATORIOS"…',
       '8.2.0: lista de materiales con letra 12 y renglones que llenan la hoja; curvas con título subrayado, datos en un renglón (nombre, edad, C.I., NH) y cuadrícula continua más grande; informe médico con la misma letra en todo, espacios parejos y raya para el sello; los pacientes electivos se pueden eliminar desde su ficha y desde la agenda (su cirugía sale del calendario).',
       '8.1.0: la app se llama SurgyDocs. Vista previa igual a la hoja impresa. NH en blanco deja el espacio para escribirlo. Mannheim visible en la nota operatoria, plan "PROBABLE ALTA MÉDICA" / "ALTA MÉDICA EL DÍA DE HOY", exámenes por regiones en párrafos separados, Materiales envía por WhatsApp la lista y el informe en Word, resumen de caso clínico del electivo en una hoja y dibujo de portada según la patología.',
-      '8.0.1: barra de abajo en mayúsculas (INICIO, PACIENTES, AGENDA, FORMATOS, AJUSTES) y encabezado "CIRUGÍA GENERAL" sin "IVSS".',
+      '8.0.1: barra de abajo en mayúsculas (INICIO, PACIENTES, AGENDA, FORMATOS, AJUSTES) y encabezado "CIRUGÍA GENERAL".',
       'Versión final (8.0): todas las correcciones de la revisión por módulos (nota operatoria, evolución y órdenes, procedimientos, curvas, egreso, interconsultas, solicitudes, consentimiento, informes, materiales, récipe, electivos y presentación). Enter pasa al campo siguiente en todos los formatos.',
       '7.1: la app ahora se llama SurgyDoc, con ícono nuevo (hoja con bisturí) y pantalla de bienvenida. En el Inicio los formatos muestran solo su nombre y ninguna palabra se corta.',
       'Nueva: versión para iPhone (app web que se instala desde Safari y funciona sin internet) y para Windows (programa instalable).',
@@ -646,7 +647,7 @@ const App = (() => {
     ].map((l) => h('p.novedad', '•  ' + l))));
 
     c.append(subtitulo('Acerca de'));
-    c.append(tarjeta(h('p.texto', `SurgyDocs · CIRUGÍA GENERAL\nDiseñada por Dr. Edgardo Caripas\nHospital "Dr. Rafael Calles Sierra" · IVSS\nVersión ${VERSION}\n\n` +
+    c.append(tarjeta(h('p.texto', `${INSTITUCION.nombreApp} · CIRUGÍA GENERAL\nDiseñada por Dr. Edgardo Caripas\n${INSTITUCION.hospitalTitulo}\nVersión ${VERSION}\n\n` +
       (esWindows ? 'Las historias se guardan solo en esta computadora' : 'Las historias se guardan solo en este teléfono') +
       '; para pasar un paciente a otro equipo use Enviar en su carpeta.')));
     pantalla.append(c);

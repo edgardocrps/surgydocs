@@ -9,7 +9,7 @@ const Almacen = (() => {
 
   function abrir() {
     return new Promise((ok, mal) => {
-      const r = indexedDB.open('HistoriasCirugia', 1);
+      const r = indexedDB.open(INSTITUCION.baseDatos, 1);
       r.onupgradeneeded = () => {
         const d = r.result;
         if (!d.objectStoreNames.contains('historias')) d.createObjectStore('historias', { keyPath: 'id' });

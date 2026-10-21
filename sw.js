@@ -1,7 +1,9 @@
 // 7.0: guarda los archivos de la app en el equipo para que funcione sin internet.
 // Lo genera tools/construir_web.sh (lista de archivos y versión); no editar sw.js a mano.
-const CACHE = 'historias-8.4.3-54afb9c950';
-const ARCHIVOS = ["./","app.css","assets/base_formatos.docx","assets/damero.docx","assets/plantilla_apendicitis.docx","assets/plantilla_biliar.docx","assets/plantilla_hernia_inguinal.docx","assets/plantilla_hernia_umbilical.docx","assets/plantilla_obstruccion.docx","assets/plantilla_politrauma.docx","assets/plantilla_vascular.docx","assets/presentacion_electivos.pptx","iconos/favicon.png","iconos/icono.ico","iconos/icono.svg","iconos/icono-180.png","iconos/icono-192.png","iconos/icono-512.png","iconos/icono-maskable-512.png","iconos/logo.svg","index.html","js/almacen.js","js/app.js","js/copia.js","js/editor.js","js/iconos.js","js/logica.js","js/nube.js","js/nucleo.js","js/ui.js","js/vistaprevia.js","lib/docx-preview.min.js","lib/jszip.min.js","manifest.webmanifest","nucleo.js","trabajador.js"];
+// SurgyDocs usa 'historias-' y SurgyDocs C usa 'coro-' (mismo dominio: cada una borra solo sus propias versiones viejas)
+const PREFIJO = 'historias-';
+const CACHE = PREFIJO + '8.5.0-a34ce041a5';
+const ARCHIVOS = ["./","app.css","assets/base_formatos.docx","assets/damero.docx","assets/plantilla_apendicitis.docx","assets/plantilla_biliar.docx","assets/plantilla_hernia_inguinal.docx","assets/plantilla_hernia_umbilical.docx","assets/plantilla_obstruccion.docx","assets/plantilla_politrauma.docx","assets/plantilla_vascular.docx","assets/presentacion_electivos.pptx","iconos/favicon.png","iconos/icono.ico","iconos/icono.svg","iconos/icono-180.png","iconos/icono-192.png","iconos/icono-512.png","iconos/icono-maskable-512.png","iconos/logo.svg","index.html","js/almacen.js","js/app.js","js/config.js","js/copia.js","js/editor.js","js/iconos.js","js/logica.js","js/nube.js","js/nucleo.js","js/ui.js","js/vistaprevia.js","lib/docx-preview.min.js","lib/jszip.min.js","manifest.webmanifest","nucleo.js","trabajador.js"];
 
 self.addEventListener('install', (e) => {
   // cache: 'reload' = se bajan de GitHub Pages, no de la caché del navegador (que podría tener una publicación anterior)
@@ -9,7 +11,7 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith(PREFIJO) && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
 self.addEventListener('fetch', (e) => {

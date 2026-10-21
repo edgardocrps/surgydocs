@@ -161,6 +161,7 @@ const Editor = (() => {
     if (multi) requestAnimationFrame(() => autoAlto(inp));
     const escribirV = (v) => { inp.value = v || ''; if (multi) autoAlto(inp); };
     if (c.sugerencias) padre.append(sugerenciasFila(inp, c.sugerencias, multi, c.clave, false, !!c.bloques));
+    if (c.catalogoMeds) padre.append(catalogoMeds(inp, c.clave));
     if (c.dinamico) {
       const caja = h('div.dinamicas');
       padre.append(caja);
@@ -176,6 +177,70 @@ const Editor = (() => {
   }
 
   function autoAlto(t) { t.style.height = 'auto'; t.style.height = Math.max(t.scrollHeight + 2, 84) + 'px'; }
+
+  /**
+   * 8.5: botón MEDICAMENTOS con el catálogo por categorías (igual que CatalogoMedsView de Android). Al tocar un medicamento se
+   * agrega su línea completa al campo; "+ AGREGAR MEDICAMENTO" guarda uno propio en esa categoría (preferencias "equipo",
+   * clave "meds_usuario": viaja en la copia de seguridad); mantener presionado uno propio lo quita.
+   */
+  function catalogoMeds(inp, clave) {
+    const raiz = h('div.catalogo-meds');
+    const cuerpo = h('div.cat-cuerpo'); cuerpo.hidden = true;
+    const cats = h('div.cat-categorias');
+    const lista = h('div.cat-lista');
+    let abierta = null, catalogo = null;
+    const propios = () => { try { return JSON.parse(Almacen.pref('equipo', 'meds_usuario', '{}')) || {}; } catch (_) { return {}; } };
+    const guardarPropios = (o) => Almacen.ponerPref('equipo', { meds_usuario: JSON.stringify(o) });
+    const agregarAlCampo = (texto) => {
+      const act = inp.value.replace(/\s+$/, '');
+      const hay = act.split('\n').map((l) => l.trim().toLowerCase());
+      const nuevas = texto.split('\n').map((l) => l.trim()).filter((l) => l && !hay.includes(l.toLowerCase()));
+      if (!nuevas.length) return;
+      inp.value = act ? act + '\n' + nuevas.join('\n') : nuevas.join('\n');
+      autoAlto(inp);
+      cambio(clave);
+      actualizarAvance();
+    };
+    function pintarLista() {
+      lista.textContent = '';
+      const cat = (catalogo || []).find((c) => c.n === abierta);
+      if (!cat) return;
+      for (const [etq, texto] of cat.m) lista.append(h('button.cat-med', { type: 'button', onclick: () => agregarAlCampo(texto) }, '+ ' + etq));
+      for (const p of propios()[cat.n] || []) {
+        const b = h('button.cat-med', { type: 'button', onclick: () => agregarAlCampo(p) }, '+ ' + p.replace(/\n/g, ' / '));
+        let t = null;
+        b.addEventListener('pointerdown', () => { t = setTimeout(async () => {
+          if (await confirmar('¿Quitar este medicamento propio?\n\n' + p, 'Quitar')) {
+            const o = propios(); o[cat.n] = (o[cat.n] || []).filter((x) => x !== p); await guardarPropios(o); pintarLista();
+          }
+        }, 650); });
+        for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => clearTimeout(t));
+        lista.append(b);
+      }
+      lista.append(h('button.cat-med.cat-nuevo', { type: 'button', onclick: async () => {
+        const nombre = (prompt('Nombre del medicamento (ej: CEFEPIME)') || '').trim();
+        if (!nombre) return;
+        const dosis = (prompt('Dosificación (ej: 2GR EV CADA 12 HORAS)') || '').trim();
+        const o = propios();
+        const texto = mayus(dosis ? `${nombre}: ${dosis.replace(/[.\s]+$/, '')}.` : `${nombre}.`);
+        o[cat.n] = [...(o[cat.n] || []).filter((x) => x !== texto), texto];
+        await guardarPropios(o); pintarLista();
+      } }, '+ AGREGAR MEDICAMENTO'));
+    }
+    function pintarCategorias() {
+      cats.textContent = '';
+      for (const c of catalogo || []) cats.append(h('button.cat-categoria' + (abierta === c.n ? '.activa' : ''), { type: 'button',
+        onclick: () => { abierta = abierta === c.n ? null : c.n; pintarCategorias(); } }, c.n));
+      pintarLista();
+    }
+    const boton = h('button.cat-boton', { type: 'button', onclick: async () => {
+      cuerpo.hidden = !cuerpo.hidden;
+      if (!cuerpo.hidden) { if (!catalogo) catalogo = await Nucleo.catalogoMeds(); pintarCategorias(); }
+    } }, 'MEDICAMENTOS  ▾');
+    cuerpo.append(cats, lista);
+    raiz.append(boton, cuerpo);
+    return raiz;
+  }
 
   /** Botones bajo un campo: en uno de varios renglones agregan un renglón; en uno simple lo reemplazan. */
   function sugerenciasFila(inp, opciones, multilinea, clave, vertical = false, bloques = false) {
@@ -486,7 +551,9 @@ const Editor = (() => {
     if (n(nuevo) === n(st.herAnterior)) return;
     const viejos = await Nucleo.ordenesHernia(st.herAnterior);
     const nuevos = await Nucleo.ordenesHernia(nuevo);
-    for (let i = 1; i <= 7; i++) if (leer('MED' + i).trim() === viejos[i - 1]) escribir('MED' + i, nuevos[i - 1]);
+    // 8.5: los medicamentos son una sola lista (MED1)
+    const m1 = leer('MED1').trim();
+    if (m1 === viejos.slice(0, 5).join('\n').trim() || m1 === viejos.join('\n').trim()) escribir('MED1', nuevos.join('\n'));
     st.herAnterior = nuevo;
   }
 

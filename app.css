@@ -308,3 +308,14 @@ textarea.campo { resize: vertical; min-height: 84px; line-height: 1.4; }
   .mosaico:hover, .mosaico2:hover, .fila-tarjeta:hover, .fila-formato:hover, .evento:hover { box-shadow: 0 2px 8px rgba(21,35,59,.16); }
   .chip:hover:not(.activo), .sugerencia:hover, .filtro:hover:not(.activo) { filter: brightness(.96); }
 }
+
+/* 8.5: catálogo de medicamentos por categorías */
+.catalogo-meds { margin-top: 8px; }
+.cat-boton { width: 100%; background: var(--marino, #15233B); color: #fff; border-radius: 14px; padding: 11px 14px; font-size: 12.5px; font-weight: 800; }
+.cat-cuerpo { margin-top: 6px; }
+.cat-categorias { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.cat-categoria { background: var(--cian-suave); border-radius: 14px; padding: 9px 10px; font-size: 11px; font-weight: 800; color: var(--marino, #15233B); }
+.cat-categoria.activa { background: var(--cian, #1BC7CF); }
+.cat-lista { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+.cat-med { background: #fff; border-radius: 14px; padding: 9px 12px; font-size: 11.5px; font-weight: 800; text-align: left; color: var(--marino, #15233B); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.cat-med.cat-nuevo { background: var(--marino, #15233B); color: #fff; text-align: center; }

@@ -10,7 +10,7 @@ const Copia = (() => {
 
   function nombreArchivo() {
     const d = new Date();
-    return `SurgyDocs_copia_${d.getFullYear()}-${d2(d.getMonth() + 1)}-${d2(d.getDate())}_${d2(d.getHours())}${d2(d.getMinutes())}.zip`;
+    return `${INSTITUCION.archivoCopia}_copia_${d.getFullYear()}-${d2(d.getMonth() + 1)}-${d2(d.getDate())}_${d2(d.getHours())}${d2(d.getMinutes())}.zip`;
   }
   const ultima = () => parseInt(Almacen.pref('copia', 'ultima', '0'), 10) || 0;
   const diasSinCopia = () => { const u = ultima(); return u > 0 ? Math.floor((Date.now() - u) / 86400000) : null; };

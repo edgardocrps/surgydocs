@@ -5,7 +5,7 @@
 const Nube = (() => {
   const API = 'https://www.googleapis.com/drive/v3';
   const SUBIDA = 'https://www.googleapis.com/upload/drive/v3';
-  const ARCHIVO = 'surgydocs_sync.zip';
+  const ARCHIVO = INSTITUCION.archivoNube;
   // iPhone / navegador: ID de cliente OAuth de tipo "Aplicación web" (se completa al publicar la página). Vacío = sin login.
   const CLIENTE_WEB = '1049586329837-hbes0gg62f88ig6u9o69ssmg6l25jagp.apps.googleusercontent.com';
   const PERMISO = 'https://www.googleapis.com/auth/drive.appdata';

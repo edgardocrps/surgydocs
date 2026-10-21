@@ -35,6 +35,7 @@ const Nucleo = (() => {
     traspaso: (d, tipo, cirujano) => json('traspaso', JSON.stringify(d), tipo, cirujano || ''),
     ordenesHernia: (tipo) => json('ordenesHernia', tipo),
     ordenesNpt: (d) => json('ordenesNpt', JSON.stringify(d)),
+    catalogoMeds: () => json('catalogoMeds'),
     cedula: (t) => llamar('cedula', t),
     vademecumNombres: (propios) => json('vademecumNombres', propios || '[]'),
     vademecumBuscar: (n, propios) => json('vademecumBuscar', n, propios || '[]'),
